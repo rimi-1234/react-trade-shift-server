@@ -2,10 +2,16 @@ const express = require('express');
 const cors = require('cors');
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require("firebase-admin");
 const app = express();
 const port = process.env.PORT || 3000;
+const serviceAccount = require("./react-trade-shift-firebase-adminsdk-key.json");
 app.use(cors());
 app.use(express.json())
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
+
 
 app.get('/', (req, res) => {
     res.send('Smart server is running')
@@ -20,6 +26,34 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+const verifyToken = async (req, res, next) => {
+    const authorization = req.headers.authorization;
+
+
+
+    if (!authorization) {
+        return res.status(401).send({
+            message: "unauthorized access. Token not found!",
+        });
+    }
+
+    const token = authorization.split(" ")[1];
+    console.log(token);
+
+    try {
+        const decord = await admin.auth().verifyIdToken(token);
+        req.token_email = decord.email;
+
+
+        next();
+    } catch (error) {
+        res.status(401).send({
+            message: "unauthorized access.",
+        });
+    }
+};
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -59,8 +93,10 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/products', async (req, res) => {
+        app.post('/products', verifyToken, async (req, res) => {
             const newProduct = req.body;
+      
+
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
         })
