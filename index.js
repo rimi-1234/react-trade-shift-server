@@ -58,7 +58,7 @@ async function run() {
             const result = await productsCollection.findOne(query);
             res.send(result);
         })
-        
+
         app.post('/products', async (req, res) => {
             const newProduct = req.body;
             const result = await productsCollection.insertOne(newProduct);
@@ -73,18 +73,30 @@ async function run() {
         app.delete('/imports/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
-            
+
             const query = { _id: new ObjectId(id) }
             const result = await importsCollection.deleteOne(query);
             res.send(result);
         })
-         app.post('/imports', async (req, res) => {
+        app.post('/imports', async (req, res) => {
             const newBid = req.body;
             const result = await importsCollection.insertOne(newBid);
             res.send(result);
         })
-    
-       
+        app.get("/latest-products", async (req, res) => {
+            const result = await productsCollection
+                .find()
+                .sort({ createdAt: "desc" })
+                .limit(6)
+                .toArray();
+
+            console.log(result);
+
+            res.send(result);
+        });
+
+
+
         app.patch('/products/:id', async (req, res) => {
             const id = req.params.id;
             const updatedProduct = req.body;
@@ -100,8 +112,8 @@ async function run() {
             res.send(result)
         })
         app.get('/imports', async (req, res) => {
-            
-          
+
+
             const cursor = importsCollection.find();
             const result = await cursor.toArray();
             res.send(result);
