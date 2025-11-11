@@ -6,7 +6,9 @@ require('dotenv').config();
 const admin = require("firebase-admin");
 const app = express();
 const port = process.env.PORT || 3000;
-const serviceAccount = require("./react-trade-shift-firebase-adminsdk-key.json");
+const decoded = Buffer.from(process.env.FIREBASE_PRIVATE_KEY, "base64").toString("utf8");
+const serviceAccount = JSON.parse(decoded);
+
 app.use(cors());
 app.use(express.json())
 admin.initializeApp({
