@@ -95,7 +95,7 @@ async function run() {
 
         app.post('/products', verifyToken, async (req, res) => {
             const newProduct = req.body;
-      
+
 
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
@@ -132,21 +132,42 @@ async function run() {
         });
 
 
+        app.put('/products/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                console.log("Updating product ID:", id);
 
-        app.patch('/products/:id', async (req, res) => {
-            const id = req.params.id;
-            const updatedProduct = req.body;
-            const query = { _id: new ObjectId(id) }
-            const update = {
-                $set: {
-                    name: updatedProduct.name,
-                    price: updatedProduct.price
+                const { _id, ...updateFields } = req.body; // remove _id
+                console.log("Fields to update:", updateFields);
+
+
+                const result = await productsCollection.updateOne(
+                    { _id: new ObjectId(id) },
+                    { $set: updateFields }
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).send({
+                        success: false,
+                        message: "Product not found"
+                    });
                 }
-            }
 
-            const result = await productsCollection.updateOne(query, update)
-            res.send(result)
-        })
+                res.send({
+                    success: true,
+                    message: "Product updated successfully",
+                    modifiedCount: result.modifiedCount
+                });
+
+            } catch (error) {
+                console.error("Error updating product:", error);
+                res.status(500).send({
+                    success: false,
+                    message: "Server error",
+                    error
+                });
+            }
+        });
         app.get('/imports', async (req, res) => {
 
 
