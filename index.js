@@ -42,7 +42,7 @@ const verifyToken = async (req, res, next) => {
     }
 
     const token = authorization.split(" ")[1];
-    console.log(token);
+
 
     try {
         const decord = await admin.auth().verifyIdToken(token);
@@ -88,6 +88,24 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
+        app.get('/exports',verifyToken, async (req, res) => {
+            
+            const email = req.query.email;
+      
+            console.log(email,req.token_email);
+            
+            
+            // verify user have access to see this data
+            if (email !== req.token_email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            // const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 }
+            // const cursor = productsCollection.find().sort({ price_min: -1 }).skip(2).limit(2).project(projectFields)
+            
+            const result = await productsCollection.find({created_by: email}).toArray()
+           
+            res.send(result)
+        });
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
 
@@ -103,7 +121,7 @@ async function run() {
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
         })
-        app.delete('/products/:id', async (req, res) => {
+        app.delete('/products/:id', verifyToken,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await productsCollection.deleteOne(query);
@@ -111,7 +129,7 @@ async function run() {
         })
         app.delete('/imports/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
+          
 
             const query = { _id: new ObjectId(id) }
             const result = await importsCollection.deleteOne(query);
@@ -129,13 +147,13 @@ async function run() {
                 .limit(6)
                 .toArray();
 
-            console.log(result);
+          
 
             res.send(result);
         });
 
 
-        app.put('/products/:id', async (req, res) => {
+        app.put('/products/:id', verifyToken, async (req, res) => {
             try {
                 const id = req.params.id;
                 console.log("Updating product ID:", id);
