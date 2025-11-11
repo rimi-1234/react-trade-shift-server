@@ -88,29 +88,33 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
-        app.get('/exports',verifyToken, async (req, res) => {
-            
+        app.get('/exports', verifyToken, async (req, res) => {
+
             const email = req.query.email;
-      
-            console.log(email,req.token_email);
-            
-            
+
+            console.log(email, req.token_email);
+
+
             // verify user have access to see this data
             if (email !== req.token_email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
             // const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 }
             // const cursor = productsCollection.find().sort({ price_min: -1 }).skip(2).limit(2).project(projectFields)
-            
-            const result = await productsCollection.find({created_by: email}).toArray()
-           
+
+            const result = await productsCollection.find({ created_by: email }).toArray()
+
             res.send(result)
         });
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id);
+            
 
             const query = { _id: new ObjectId(id) }
             const result = await productsCollection.findOne(query);
+            console.log(result);
+            
             res.send(result);
         })
 
@@ -121,7 +125,7 @@ async function run() {
             const result = await productsCollection.insertOne(newProduct);
             res.send(result);
         })
-        app.delete('/products/:id', verifyToken,  async (req, res) => {
+        app.delete('/products/:id', verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await productsCollection.deleteOne(query);
@@ -129,17 +133,44 @@ async function run() {
         })
         app.delete('/imports/:id', async (req, res) => {
             const id = req.params.id;
-          
+
 
             const query = { _id: new ObjectId(id) }
             const result = await importsCollection.deleteOne(query);
             res.send(result);
         })
-        app.post('/imports', async (req, res) => {
-            const newBid = req.body;
-            const result = await importsCollection.insertOne(newBid);
-            res.send(result);
-        })
+        app.post('/imports/:id', async (req, res) => {
+            const newProduct = req.body;
+            const id = req.params.id
+
+            const result = await importsCollection.insertOne(newProduct);
+
+            const { productId, importedQuantity, created_by } = req.body;
+
+            const product = await productsCollection.findOne({ _id: new ObjectId(productId) });
+            console.log(product);
+
+            if (!product) {
+                return res.status(404).json({ message: "Product not found" });
+            }
+
+            if (importedQuantity > product.quantity) {
+                return res.status(400).json({
+                    message: `Cannot import more than available quantity (${product.quantity})`,
+                });
+            }
+            const quantityNum = Number(importedQuantity);
+            const filter = { _id: new ObjectId(id) }
+            const update = {
+                $inc: {
+                    quantity: -quantityNum
+                }
+            }
+            const updateResult = await productsCollection.updateOne(filter, update)
+
+            res.send(result, updateResult); // send both as object
+        });
+
         app.get("/latest-products", async (req, res) => {
             const result = await productsCollection
                 .find()
@@ -147,7 +178,7 @@ async function run() {
                 .limit(6)
                 .toArray();
 
-          
+
 
             res.send(result);
         });
