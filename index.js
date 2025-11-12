@@ -179,6 +179,17 @@ async function run() {
 
             res.send(result);
         });
+        app.get("/best-products", async (req, res) => {
+            const result = await productsCollection
+                .find()
+                .sort({ rating: "desc" })
+                .limit(10)
+                .toArray();
+
+
+
+            res.send(result);
+        });
 
 
         app.put('/products/:id', verifyToken, async (req, res) => {
