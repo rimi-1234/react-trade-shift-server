@@ -92,15 +92,11 @@ async function run() {
 
             const email = req.query.email;
 
-            console.log(email, req.token_email);
-
 
             // verify user have access to see this data
             if (email !== req.token_email) {
                 return res.status(403).send({ message: 'forbidden access' })
             }
-            // const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 }
-            // const cursor = productsCollection.find().sort({ price_min: -1 }).skip(2).limit(2).project(projectFields)
 
             const result = await productsCollection.find({ created_by: email }).toArray()
 
@@ -109,12 +105,12 @@ async function run() {
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
-            
+
 
             const query = { _id: new ObjectId(id) }
             const result = await productsCollection.findOne(query);
             console.log(result);
-            
+
             res.send(result);
         })
 
@@ -131,7 +127,8 @@ async function run() {
             const result = await productsCollection.deleteOne(query);
             res.send(result);
         })
-        app.delete('/imports/:id', async (req, res) => {
+        app.delete('/imports/:id', verifyToken, async (req, res) => {
+
             const id = req.params.id;
 
 
@@ -220,13 +217,29 @@ async function run() {
                 });
             }
         });
-        app.get('/imports', async (req, res) => {
+        app.get('/imports', verifyToken, async (req, res) => {
+
+            const email = req.query.email;
+            console.log(email);
 
 
-            const cursor = importsCollection.find();
+            if (email !== req.token_email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+
+
+
+
+            const cursor = importsCollection.find({ created_by: email });
             const result = await cursor.toArray();
             res.send(result);
         })
+        app.get("/search", async (req, res) => {
+            const search_text = req.query.search
+            const result = await productsCollection.find({ name: { $regex: search_text, $options: "i" } }).toArray()
+            res.send(result)
+        })
+
 
         await client.connect();
         // Send a ping to confirm a successful connection
