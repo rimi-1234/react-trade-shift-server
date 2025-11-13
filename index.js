@@ -19,9 +19,8 @@ admin.initializeApp({
 app.get('/', (req, res) => {
     res.send('Smart server is running')
 })
-// simple-trade-shift
-// iepGV7lt0g2IXwDc
-const uri = "mongodb+srv://simple-trade-shift:iepGV7lt0g2IXwDc@cluster0.dw7x2dn.mongodb.net/?appName=Cluster0";
+
+const uri = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASS}@cluster0.dw7x2dn.mongodb.net/?appName=Cluster0`;
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -32,6 +31,8 @@ const client = new MongoClient(uri, {
 
 const verifyToken = async (req, res, next) => {
     const authorization = req.headers.authorization;
+    console.log(authorization);
+    
 
 
 
@@ -42,6 +43,8 @@ const verifyToken = async (req, res, next) => {
     }
 
     const token = authorization.split(" ")[1];
+    console.log(token);
+    
 
 
     try {
@@ -64,10 +67,13 @@ async function run() {
         const db = client.db('smart_trade_db');
         const productsCollection = db.collection('products');
         const importsCollection = db.collection('imports');
+        const usersCollection = db.collection('users');
 
 
         app.post('/users', async (req, res) => {
             const newUser = req.body;
+            console.log(newUser);
+            
             const email = req.body.email;
             const query = { email: email }
             const existingUser = await usersCollection.findOne(query);
@@ -252,9 +258,9 @@ async function run() {
         })
 
 
-        await client.connect();
+        // await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
