@@ -14,7 +14,8 @@ app.use(express.json())
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
-
+// react-etutor-db
+// 1GSwNcQDMIa8C64x
 
 app.get('/', (req, res) => {
     res.send('Smart server is running')
@@ -32,7 +33,7 @@ const client = new MongoClient(uri, {
 const verifyToken = async (req, res, next) => {
     const authorization = req.headers.authorization;
     console.log(authorization);
-    
+
 
 
 
@@ -44,7 +45,7 @@ const verifyToken = async (req, res, next) => {
 
     const token = authorization.split(" ")[1];
     console.log(token);
-    
+
 
 
     try {
@@ -73,7 +74,7 @@ async function run() {
         app.post('/users', async (req, res) => {
             const newUser = req.body;
             console.log(newUser);
-            
+
             const email = req.body.email;
             const query = { email: email }
             const existingUser = await usersCollection.findOne(query);
@@ -86,7 +87,20 @@ async function run() {
                 res.send(result);
             }
         })
-        app.get('/products', async (req, res) => {
+        // Get user role by email
+        app.get('/users/role/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+
+            const user = await usersCollection.findOne(query);
+
+            if (user) {
+                res.send({ role: user.role });
+            } else {
+                res.status(404).send({ message: "User not found" });
+            }
+        });
+  app.get('/products', async (req, res) => {
             // const projectFields = { title: 1, price_min: 1, price_max: 1, image: 1 }
             // const cursor = productsCollection.find().sort({ price_min: -1 }).skip(2).limit(2).project(projectFields)
 
@@ -94,6 +108,7 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result)
         });
+
         app.get('/exports', verifyToken, async (req, res) => {
 
             const email = req.query.email;
@@ -119,6 +134,19 @@ async function run() {
 
             res.send(result);
         })
+        app.patch('/users/:email', async (req, res) => {
+      const email = req.params.email;
+      const { name, image } = req.body;
+      const filter = { email: email };
+      const updatedDoc = {
+        $set: {
+          name: name,
+          image: image
+        }
+      };
+      const result = await usersCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
 
         app.post('/products', verifyToken, async (req, res) => {
             const newProduct = req.body;
