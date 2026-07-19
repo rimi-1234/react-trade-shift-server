@@ -2,7 +2,7 @@
 
 TradeShift Backend is a secure and scalable REST API built with **Node.js**, **Express.js**, and **MongoDB**. It powers the TradeShift e-commerce platform by handling authentication, product management, imports, exports, and database operations through well-structured API endpoints.
 
-🌐 **Live API:** https://your-backend-url.onrender.com
+🌐 **Live:** [https://react-tract-shift-client.vercel.app/]
 
 ---
 
