@@ -6,7 +6,7 @@ TradeShift is a feature-rich, fully responsive e-commerce web platform designed 
 
 ---
 
-## 🖥️ Backend API & Database Preview
+## 🖥️ preview
 ![TradeShift Backend Screenshot](./623677370-92eaddb9-e219-4df9-8fec-704dac80f2b4.png)
 
 ---
